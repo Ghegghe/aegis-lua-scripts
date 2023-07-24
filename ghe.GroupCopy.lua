@@ -1,7 +1,7 @@
 script_name="GroupCopy"
 script_description="Copy start tags from 1 to n lines and from n to n lines"
 script_author="Ghegghe"
-script_version="0.1.0"
+script_version="0.2.0"
 script_namespace="ghe.GroupCopy"
 
 function table.shallowCopy(table)
@@ -136,11 +136,12 @@ function groupCopy(subs, sel)
 	while iLine <= #sel and (not( lines[ iLine ].comment and lines[ iLine ].text == '--end' )) do
 		iLine = iLine + 1
 		-- check in case of multiple commented lines
-		if lines[ iLine ].comment and iLine > 1 and not lines[ iLine - 1 ].comment then 
+		if iLine <= #sel and lines[ iLine ].comment and iLine > 1 and not lines[ iLine - 1 ].comment then 
 			groupToGroupCount = groupToGroupCount + 1
 		end
 	end
 	local toCopyLinesLength = iLine - 1
+	iLine = iLine + 1
 
 	-- build GUI
 	local groupcopyGUI={
@@ -185,15 +186,38 @@ function groupCopy(subs, sel)
 			progress("Groupcopying lines " .. iToCopyLines .. " / " .. toCopyLinesLength)
 
 			-- find next group
-			while iLine <= #sel and lines[ iLine ].comment do
-				iLine = iLine + 1
+			if lines[ iLine ].comment then
+				-- jump to next to copy into group
+				while iLine <= #sel and lines[ iLine ].comment do
+					iLine = iLine + 1
+				end
+				-- jump to next to copy from group
+				if checkboxes.groupToGroup then
+					while iToCopyLines <= toCopyLinesLength and not lines[ iToCopyLines ].comment do
+						iToCopyLines = iToCopyLines + 1
+					end
+					while iToCopyLines <= toCopyLinesLength and lines[ iToCopyLines ].comment do
+						iToCopyLines = iToCopyLines + 1
+					end
+				end
 			end
-			-- find next to copy from group
-			while iToCopyLines <= toCopyLinesLength and lines[ iToCopyLines ].comment do
-				iToCopyLines = iToCopyLines + 1
+			
+			if lines[ iToCopyLines ].comment then
+				-- jump to next to copy from group
+				while iToCopyLines <= toCopyLinesLength and lines[ iToCopyLines ].comment do
+					iToCopyLines = iToCopyLines + 1
+				end
+				-- jump to next to copy into group
+				while iLine <= #sel and not lines[ iLine ].comment do
+					iLine = iLine + 1
+				end
+				while iLine <= #sel and lines[ iLine ].comment do
+					iLine = iLine + 1
+				end
 			end
+			
 
-			if iLine <= #sel then
+			if iLine <= #sel and iToCopyLines <= toCopyLinesLength then
 				-- fetch stags
 				-- [type, value]
 				local toCopyTags = getStartTags(lines[ iToCopyLines ].text)
