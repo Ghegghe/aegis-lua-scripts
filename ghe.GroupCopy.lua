@@ -1,7 +1,7 @@
 script_name="GroupCopy"
 script_description="Copy start tags from 1 to n lines and from n to n lines"
 script_author="Ghegghe"
-script_version="0.3.0"
+script_version="1.0.0"
 script_namespace="ghe.GroupCopy"
 
 function table.shallowCopy(table)
@@ -29,6 +29,7 @@ function error(message, cancel)
 		aegisub.cancel()
 	end 
 end
+
 
 -- returns an object with the "type" of the tag and his "value"
 function getTypeAndValue(tag)
