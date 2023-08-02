@@ -5,6 +5,8 @@ You can also check if you want to overwrite existent tags, keep inline and/or ol
 <br />
 For make this script works, you must select all the lines from which tags will be copied, and the lines on which tags will be copied, separated at least by one commented line.<br />
 To separate the lines "to be copied from" and the lines "to be copied to", put a commented line wich only contains "--end".<br />
+By default, new tags will be added to the end of the old tags.<br />
+If you check the "Transform at the end of line" option, all the transforms will be moved to the end.<br />
 <br />
 ### This script can:
   - copy start tags from 1 to n lines * x

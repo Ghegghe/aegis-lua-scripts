@@ -1,7 +1,7 @@
 script_name="GroupCopy"
 script_description="Copy start tags from 1 to n lines and from n to n lines"
 script_author="Ghegghe"
-script_version="0.2.0"
+script_version="1.0.0"
 script_namespace="ghe.GroupCopy"
 
 function table.shallowCopy(table)
@@ -29,6 +29,7 @@ function error(message, cancel)
 		aegisub.cancel()
 	end 
 end
+
 
 -- returns an object with the "type" of the tag and his "value"
 function getTypeAndValue(tag)
@@ -89,7 +90,7 @@ function getTypeAndValue(tag)
 		{name="reset", tag="\\r"},
 	}
 	for key, value in ipairs(tags) do
-		if tag:match(value.tag) then
+		if tag:match("^" .. value.tag) then
 			return {type=value.tag, value=tag:gsub(value.tag, "")}
 		end
 	end
@@ -104,14 +105,23 @@ function getStartTags(stags)
 	
 	if char == "{" then
 		-- if stag present
+		-- jump to next char = \
+		iStags = iStags + 1
+		char = stags:sub(iStags, iStags)
 		repeat
 			-- copy the single tag
 			local tag = ""
+			local parenthesis = 0
 			repeat
 				tag = tag .. char
+				if char == '(' then
+					parenthesis = parenthesis + 1
+				elseif char == ')' then
+					parenthesis = parenthesis - 1
+				end
 				iStags = iStags + 1
 				char = stags:sub(iStags, iStags)
-			until char == "\\" or char == "}"
+			until parenthesis <= 0 and char == "\\" or char == "}"
 			table.insert(tagObj, getTypeAndValue(tag))
 		until char == "}"
 		return tagObj
@@ -133,7 +143,7 @@ function groupCopy(subs, sel)
 	-- get to copy lines from first group
 	local iLine = 1
 	local groupToGroupCount = 0
-	while iLine <= #sel and (not( lines[ iLine ].comment and lines[ iLine ].text == '--end' )) do
+	while iLine <= #sel and (not( lines[ iLine ].comment and lines[ iLine ].text:match("--end"))) do
 		iLine = iLine + 1
 		-- check in case of multiple commented lines
 		if iLine <= #sel and lines[ iLine ].comment and iLine > 1 and not lines[ iLine - 1 ].comment then 
@@ -157,6 +167,9 @@ function groupCopy(subs, sel)
 		class = "checkbox", name = "keep", value = true,
 		label = "Keep old tags", hint = "Doesn't remove the start tags which doesn't match with new tags"},
 		{x = 0, y = 4, 
+		class = "checkbox", name = "transformToEndOfLine", value = true,
+		label = "Transform at end of line", hint = "Copy transform tags at the end of the line"},
+		{x = 0, y = 5, 
 		class = "checkbox", name = "groupToGroup",
 		label = "Copt tags from n to n", hint = "Copy tags from n line to n line, * x groups"},
 	}
@@ -216,7 +229,6 @@ function groupCopy(subs, sel)
 				end
 			end
 			
-
 			if iLine <= #sel and iToCopyLines <= toCopyLinesLength then
 				-- fetch stags
 				-- [type, value]
@@ -229,26 +241,39 @@ function groupCopy(subs, sel)
 
 					if checkboxes.keep and oldTags ~= nil then
 						-- join tags
-						for _, oldValue in ipairs(oldTags) do
+						for _, newTag in ipairs(newTags) do
 							local isPresent = false
-							for newKey, newValue in ipairs(newTags) do
+							for oldKey, oldTag in ipairs(oldTags)do
 								-- replace tag if is the same
 								-- transform check
-								if oldValue.type == newValue.type and
-								 	(oldValue ~= "\\t" or
-								  		(oldValue.type == "\\t" and
-										 oldValue.value == newValue.value)) then
+								if oldTag.type == newTag.type and 
+									(oldTag.type ~= "\\t" or
+									(oldTag.type == "\\t" and oldTag.value == newTag.value)) then
 									isPresent = true
-									-- overwrite if selected
+									-- overwrite
 									if checkboxes.overwrite then
-										newTags[ newKey ].value = oldValue.value
+										oldTags[ oldKey ].value = newTag.value
 									end
 								end
 							end
 
-							-- add the old tag 
+							-- add the new tag 
+							-- new tags are added after old tags by default
 							if not isPresent then
-								table.insert(newTags, oldValue)
+								table.insert(oldTags, newTag)
+							end
+						end
+						-- switch reference
+						newTags = oldTags
+					end
+
+					-- move transforms into a new object
+					local newTransforms = {}
+					if checkboxes.transformToEndOfLine then
+						for key = #newTags, 1, -1 do
+							if newTags[ key ].type == "\\t" then
+								table.insert(newTransforms, newTags[ key ])
+								table.remove(newTags, key)
 							end
 						end
 					end
@@ -262,8 +287,11 @@ function groupCopy(subs, sel)
 
 					-- copy tags
 					local tags = ""
-					for key, value in ipairs(newTags) do
+					for _, value in ipairs(newTags) do
 						tags = tags .. value.type .. value.value
+					end
+					for key = #newTransforms, 1, -1 do
+						tags = tags .. newTransforms[ key ].type .. newTransforms[ key ].value
 					end
 					lines[ iLine ].text = "{" .. tags .. "}" .. lines[ iLine ].text
 					subs[ sel[ iLine ] ] = lines[ iLine ]
@@ -296,25 +324,45 @@ end
 groupHelp=[[
 Groupcopy
 It allows you to copy all the start tag from N to N lines.
-You can also check if you want to overwrite existent tags, 
-keep inline and/or old start tags from lines on which tags will be copied.
+You can also check if you want to overwrite existent tags, keep inline and/or old start tags from lines on which tags will be copied.
+By default, new tags will be added to the end of the old tags.
+If you check the "Transform at the end of line" option, all the transforms will be moved to the end.
 
-For make this script works, you must select all the lines from which tags will be copied,
-and the lines on which tags will be copied, separated at least by one commented line.
+For make this script works, you must select all the lines from which tags will be copied, and the lines on which tags will be copied, separated at least by one commented line.
+To separate the lines "to be copied from" and the lines "to be copied to", put a commented line wich only contains "--end".
+
+This script can:
+  - copy start tags from 1 to n lines * x
 
 Example:
--{\b1} (copy from)
--{\fad(300,400)} (copy from)
--commented lines (separator) 
--(first group of lines (1), \b will be copied here)
--(first group of lines (2), \b will be copied here)
--commented lines (separator) 
--(second group of lines (1), \fad(300,400) will be copied here)
--(second group of lines (2), \fad(300,400) will be copied here)
--(second group of lines (3), \fad(300,400) will be copied here)
+{\b1} (copy from)
+{\fad(300,400)} (copy from)
+commented lines (separator) text = ""--end
+(first group of lines (1), \b will be copied here)
+(first group of lines (2), \b will be copied here)
+commented lines (separator)
+(second group of lines (1), \fad(300,400) will be copied here)
+(second group of lines (2), \fad(300,400) will be copied here)
+(second group of lines (3), \fad(300,400) will be copied here)
+
+ - copy start tags from n to n lines * x
+
+Example:
+{\b1} (copy from)
+{\i1} (copy from)
+commented lines (separator)
+{\u1} (copy from)
+{s1} (copy from)
+commented lines (separator) text = ""--end
+(first group of lines (1-1), \b1 will be copied here)
+(first group of lines (1-2), \i1 will be copied here)
+commented lines (separator)
+(second group of lines (2-1), \u1 will be copied here)
+(second group of lines (1-1), \s1 will be copied here)
 
 Obviously, you can copy more than one tag for group.
-Having said that, have fun.]]
+Having said that, have fun.
+]]
 
 function help()
 	selection = aegisub.dialog.display({
