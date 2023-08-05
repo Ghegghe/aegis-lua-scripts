@@ -245,6 +245,11 @@ function groupCopy(subs, sel)
 							local isPresent = false
 							for oldKey, oldTag in ipairs(oldTags)do
 								-- replace tag if is the same
+								-- clip / iclip conversion
+								if (oldTag.type == "\\clip" and newTag.type == "\\iclip") or 
+									(oldTag.type == "\\iclip" and newTag.type == "\\clip") then
+									oldTag.type = newTag.type
+								end
 								-- transform check
 								if oldTag.type == newTag.type and 
 									(oldTag.type ~= "\\t" or
