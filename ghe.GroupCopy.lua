@@ -1,7 +1,7 @@
 script_name="GroupCopy"
 script_description="Copy start tags from 1 to n lines and from n to n lines"
 script_author="Ghegghe"
-script_version="1.0.0"
+script_version="2.0.0"
 script_namespace="ghe.GroupCopy"
 
 function table.shallowCopy(table)
@@ -170,8 +170,8 @@ function groupCopy(subs, sel)
 		class = "checkbox", name = "transformToEndOfLine", value = true,
 		label = "Transform at end of line", hint = "Copy transform tags at the end of the line"},
 		{x = 0, y = 5, 
-		class = "checkbox", name = "groupToGroup",
-		label = "Copt tags from n to n", hint = "Copy tags from n line to n line, * x groups"},
+		class = "checkbox", name = "copyLayer",
+		label = "Include layers", hint = "Also copy the layer"},
 	}
 	if iLine > #sel then
 		table.insert(groupcopyGUI, 
@@ -180,8 +180,8 @@ function groupCopy(subs, sel)
 	end
 	local press, checkboxes = aegisub.dialog.display(
 		groupcopyGUI, 
-		{"Make me fly", "Bring me back to school", "Not today"},
-		{ok = 'Make me fly', close = 'Not today'})
+		{"Copy 1 to n", "Copy n to n", "Bring me back to school", "Not today"},
+		{ok = 'Copy 1 to n', close = 'Not today'})
 
 	if press == "Not today" then 
 		-- exit
@@ -193,6 +193,7 @@ function groupCopy(subs, sel)
 	else
 		-- groupcopy
 		local iToCopyLines = 1
+		local isGroupToGroup = press == "Copy n to n"
 
 		-- for all lines
 		while iLine <= #sel and iToCopyLines <= toCopyLinesLength do
@@ -205,7 +206,7 @@ function groupCopy(subs, sel)
 					iLine = iLine + 1
 				end
 				-- jump to next to copy from group
-				if checkboxes.groupToGroup then
+				if isGroupToGroup then
 					while iToCopyLines <= toCopyLinesLength and not lines[ iToCopyLines ].comment do
 						iToCopyLines = iToCopyLines + 1
 					end
@@ -282,6 +283,11 @@ function groupCopy(subs, sel)
 							end
 						end
 					end
+
+					-- copy layer
+					if checkboxes.copyLayer then
+						lines[ iLine ].layer = lines[ iToCopyLines ].layer
+					end
 					
 					-- clear the line
 					if checkboxes.keepInline then
@@ -304,7 +310,7 @@ function groupCopy(subs, sel)
 					iLine = iLine + 1
 
 					-- exit for groutToGroup case
-					if checkboxes.groupToGroup then
+					if isGroupToGroup then
 						break
 					end
 				end
