@@ -180,7 +180,7 @@ function groupCopy(subs, sel)
 	end
 	local press, checkboxes = aegisub.dialog.display(
 		groupcopyGUI, 
-		{"Copy 1 to n", "Copy n to n", "Bring me back to school", "Not today"},
+		{"Copy 1 to n", "Copy n to n", "Copy n to n (single group)", "Bring me back to school", "Not today"},
 		{ok = 'Copy 1 to n', close = 'Not today'})
 
 	if press == "Not today" then 
@@ -194,9 +194,10 @@ function groupCopy(subs, sel)
 		-- groupcopy
 		local iToCopyLines = 1
 		local isGroupToGroup = press == "Copy n to n"
+		local isSingleGroupIteration = press == "Copy n to n (single group)"
 
 		-- for all lines
-		while iLine <= #sel and iToCopyLines <= toCopyLinesLength do
+		while iLine <= #sel and (iToCopyLines <= toCopyLinesLength or isSingleGroupIteration) do
 			progress("Groupcopying lines " .. iToCopyLines .. " / " .. toCopyLinesLength)
 
 			-- find next group
@@ -213,13 +214,19 @@ function groupCopy(subs, sel)
 					while iToCopyLines <= toCopyLinesLength and lines[ iToCopyLines ].comment do
 						iToCopyLines = iToCopyLines + 1
 					end
+				elseif isSingleGroupIteration then
+					iToCopyLines = 1
 				end
 			end
 			
 			if lines[ iToCopyLines ].comment then
 				-- jump to next to copy from group
-				while iToCopyLines <= toCopyLinesLength and lines[ iToCopyLines ].comment do
-					iToCopyLines = iToCopyLines + 1
+				if isSingleGroupIteration then
+					iToCopyLines = 1
+				else
+					while iToCopyLines <= toCopyLinesLength and lines[ iToCopyLines ].comment do
+						iToCopyLines = iToCopyLines + 1
+					end
 				end
 				-- jump to next to copy into group
 				while iLine <= #sel and not lines[ iLine ].comment do
@@ -310,7 +317,7 @@ function groupCopy(subs, sel)
 					iLine = iLine + 1
 
 					-- exit for groutToGroup case
-					if isGroupToGroup then
+					if isGroupToGroup or isSingleGroupIteration then
 						break
 					end
 				end
