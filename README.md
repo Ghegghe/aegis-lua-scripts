@@ -8,7 +8,9 @@ A collection of useful scripts for [Aegisub](http://www.aegisub.org/) to automat
 - [Groupcopy](#groupcopy)
 - [Whispers](#whispers)
 
-### 🌐 GlobalRotation
+---
+
+## 🌐 GlobalRotation
 
 **GlobalRotation** is a Lua script for Aegisub that allows you to rotate multiple subtitle lines around a specific origin point, while preserving each line’s original rotation.
 
@@ -26,7 +28,7 @@ A collection of useful scripts for [Aegisub](http://www.aegisub.org/) to automat
 
 ---
 
-### 📋 Groupcopy
+## 📋 Groupcopy
 
 **Groupcopy** is a script that allows you to copy all start tags from N lines to N lines, with options to overwrite existing tags, keep inline tags, and preserve old start tags on the destination lines.
 
@@ -78,7 +80,7 @@ You can copy more than one tag for each group. Have fun!
 
 ---
 
-### 🎧 Whispers
+## 🎧 Whispers
 
 **Whispers** is a Lua script for Aegisub that automatically transcribes spoken audio from the selected subtitle lines using OpenAI Whisper.
 
