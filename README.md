@@ -4,11 +4,9 @@ A collection of useful scripts for [Aegisub](http://www.aegisub.org/) to automat
 
 ## 📜 Table of Contents
 
-- [GlobalRotation](#globalrotation)
-- [Groupcopy](#groupcopy)
-- [Whispers](#whispers)
-
----
+- [GlobalRotation](#-globalrotation)
+- [Groupcopy](#-groupcopy)
+- [Whispers](#-whispers)
 
 ## 🌐 GlobalRotation
 
@@ -25,8 +23,6 @@ A collection of useful scripts for [Aegisub](http://www.aegisub.org/) to automat
 2. Run the `GlobalRotation` script from the `Automation` menu.
 3. Specify the origin point for rotation.
 4. The script will apply rotation transformations relative to the chosen origin without altering the original org.
-
----
 
 ## 📋 Groupcopy
 
@@ -77,8 +73,6 @@ Example:
 ```
 
 You can copy more than one tag for each group. Have fun!
-
----
 
 ## 🎧 Whispers
 
