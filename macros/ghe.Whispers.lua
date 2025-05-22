@@ -1,16 +1,13 @@
---[[
-Script: Whispers
-Descrizione: Estrae un clip audio con FFmpeg, lo passa a Whisper e salva la trascrizione nella linea.
-Autore: Ghegghe
-Versione: 1.0.0
-Namespace: ghe.Whispers
-]]
-
 script_name        = "Whispers"
 script_description = "Get audio transcription"
 script_author      = "Ghegghe"
 script_version     = "1.0.0"
 script_namespace   = "ghe.Whispers"
+
+local DependencyControl = require("l0.DependencyControl")
+local version = DependencyControl{
+    feed = "https://raw.githubusercontent.com/Ghegghe/aegis-lua-scripts/main/DependencyControl.json"
+}
 
 local pathsep = package.config:sub(1,1)
 
@@ -66,4 +63,4 @@ function whisper(subs, sel)
     aegisub.set_undo_point(script_name)
 end
 
-aegisub.register_macro(script_name, script_description, whisper)
+version:registerMacro(whisper)
