@@ -78,13 +78,11 @@ You can copy more than one tag for each group. Have fun!
 
 **Whispers** is a Lua script for Aegisub that automatically transcribes spoken audio from the selected subtitle lines using OpenAI Whisper.
 
-It works by extracting audio clips based on each line’s timing and passing them to a standalone Whisper executable for transcription. The recognized text is then inserted directly into the subtitle line.
-
 ### ✨ Features
 
 - Automatically extracts audio clips for selected lines.
-- Sends clips to [whisper-standalone-win](https://github.com/Purfview/whisper-standalone-win) for transcription.
-- Inserts transcribed text into the subtitle's text field.
+- Sends clips to [faster-whisper](https://github.com/SYSTRAN/faster-whisper) for transcription.
+- Configurable parameters.
 
 ### 📦 Requirements
 
@@ -103,20 +101,16 @@ To enable GPU acceleration, the following NVIDIA libraries must be installed:
 ### 🛠️ Installation
 
 1. Download `ghe.Whispers.lua` and place it in your automation folder.
-2. Download and extract [ffmpeg](https://ffmpeg.org/download.html).
-3. Download and extract [whisper-standalone-win](https://github.com/Purfview/whisper-standalone-win).
-4. Make sure both `ffmpeg.exe` and `whisper-standalone.exe` are in your system `PATH`.
-5. Restart Aegisub.
+2. Restart Aegisub.
+3. All dependencies are delivered automatically, just start the script and start download them.
 
 ### ▶️ Usage
 
 1. Open a video or audio file in Aegisub.
 2. Select one or more subtitle lines.
 3. Run the script via `Automation` → `Whispers`.
-4. Transcribed text will be automatically inserted into the selected lines.
 
 ### 📝 Notes
 
-- The script creates temporary WAV files in the script's directory.
-- Make sure you have sufficient disk space for temporary files.
+- The script creates a temporary timestamp file in the sub directory.
 - Processing time depends on the length of selected clips and your hardware.
