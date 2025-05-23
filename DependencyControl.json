@@ -1,56 +1,55 @@
 {
-	"dependencyControlFeedFormatVersion": "0.3.0",
-	"name": "Ghegghe's Automation Scripts",
-	"description": "Main repository for Ghegghe's automation scripts.",
-	"baseUrl": "https://github.com/Ghegghe/aegis-lua-scripts",
-	"url": "@{baseUrl}",
-	"fileBaseUrl": "https://raw.githubusercontent.com/Ghegghe/aegis-lua-scripts",
-	"maintainer": "Ghegghe",
-	"knownFeeds": {
-		"line0scripts": "https://raw.githubusercontent.com/TypesettingTools/line0-Aegisub-Scripts/master/DependencyControl.json",
-		"a-mo": "https://raw.githubusercontent.com/TypesettingTools/Aegisub-Motion/DepCtrl/DependencyControl.json",
-		"SubInspector": "https://raw.githubusercontent.com/TypesettingTools/SubInspector/master/DependencyControl.json",
-		"ASSFoundation": "https://raw.githubusercontent.com/TypesettingTools/ASSFoundation/master/DependencyControl.json",
-		"ffi-experiments": "https://raw.githubusercontent.com/torque/ffi-experiments/master/DependencyControl.json",
-		"lyger-scripts": "https://raw.githubusercontent.com/TypesettingTools/lyger-Aegisub-Scripts/master/DependencyControl.json",
-		"unanimated-scripts": "https://raw.githubusercontent.com/unanimated/luaegisub/master/DependencyControl.json",
-		"coffeeflux-scripts": "https://raw.githubusercontent.com/TypesettingTools/CoffeeFlux-Aegisub-Scripts/master/DependencyControl.json",
-		"myaamori-scripts": "https://raw.githubusercontent.com/TypesettingTools/Myaamori-Aegisub-Scripts/master/DependencyControl.json",
-		"petzku-scripts": "https://raw.githubusercontent.com/petzku/Aegisub-Scripts/master/DependencyControl.json",
-		"zahuczky-scripts": "https://raw.githubusercontent.com/Zahuczky/Zahuczkys-Aegisub-Scripts/main/DependencyControl.json",
-		"zeref-aegisub-scripts": "https://raw.githubusercontent.com/TypesettingTools/zeref-Aegisub-Scripts/main/DependencyControl.json",
-		"phoscity-scripts": "https://raw.githubusercontent.com/PhosCity/Aegisub-Scripts/main/DependencyControl.json",
-		"zeref-scripts": "https://raw.githubusercontent.com/TypesettingTools/zeref-Aegisub-Scripts/main/DependencyControl.json",
-		"arch1t3cht-scripts": "https://raw.githubusercontent.com/TypesettingTools/arch1t3cht-Aegisub-Scripts/main/DependencyControl.json",
-		"ILL": "https://raw.githubusercontent.com/TypesettingTools/ILL-Aegisub-Scripts/main/DependencyControl.json",
-		"Ghegghe": "https://raw.githubusercontent.com/Ghegghe/aegis-lua-scripts/main/DependencyControl.json"
-	},
-	"macros": {
-		"ghe.Whispers": {
-			"url": "@{baseUrl}#@{namespace}",
-			"author": "Ghegghe",
-			"name": "Whispers",
-			"description": "Transcrive audio to text",
-			"fileBaseUrl": "@{fileBaseUrl}/@{channel}/macros/@{namespace}",
-			"channels": {
-				"main": {
-					"version": "0.1.0",
-					"released": "2025-05-22",
-					"default": true,
-					"files": [
-						{
-							"name": ".lua",
-							"url": "@{fileBaseUrl}@{fileName}",
-							"sha1": "F77CAF00E1C67A1DA183D5142E6FD580FF231F77"
-						}
-					]
-				}
-			},
-			"changelog": {
-				"0.1.0": [
-					"Initial Release"
-				]
-			}
-    	}
-	}
+  "dependencyControlFeedFormatVersion": "0.3.0",
+  "name": "Ghegghe's Automation Scripts",
+  "description": "Main repository for Ghegghe's automation scripts.",
+  "baseUrl": "https://github.com/Ghegghe/aegis-lua-scripts",
+  "url": "@{baseUrl}",
+  "fileBaseUrl": "https://raw.githubusercontent.com/Ghegghe/aegis-lua-scripts",
+  "maintainer": "Ghegghe",
+  "knownFeeds": {
+    "line0scripts": "https://raw.githubusercontent.com/TypesettingTools/line0-Aegisub-Scripts/master/DependencyControl.json",
+    "a-mo": "https://raw.githubusercontent.com/TypesettingTools/Aegisub-Motion/DepCtrl/DependencyControl.json",
+    "SubInspector": "https://raw.githubusercontent.com/TypesettingTools/SubInspector/master/DependencyControl.json",
+    "ASSFoundation": "https://raw.githubusercontent.com/TypesettingTools/ASSFoundation/master/DependencyControl.json",
+    "ffi-experiments": "https://raw.githubusercontent.com/torque/ffi-experiments/master/DependencyControl.json",
+    "lyger-scripts": "https://raw.githubusercontent.com/TypesettingTools/lyger-Aegisub-Scripts/master/DependencyControl.json",
+    "unanimated-scripts": "https://raw.githubusercontent.com/unanimated/luaegisub/master/DependencyControl.json",
+    "coffeeflux-scripts": "https://raw.githubusercontent.com/TypesettingTools/CoffeeFlux-Aegisub-Scripts/master/DependencyControl.json",
+    "myaamori-scripts": "https://raw.githubusercontent.com/TypesettingTools/Myaamori-Aegisub-Scripts/master/DependencyControl.json",
+    "petzku-scripts": "https://raw.githubusercontent.com/petzku/Aegisub-Scripts/master/DependencyControl.json",
+    "zahuczky-scripts": "https://raw.githubusercontent.com/Zahuczky/Zahuczkys-Aegisub-Scripts/main/DependencyControl.json",
+    "zeref-aegisub-scripts": "https://raw.githubusercontent.com/TypesettingTools/zeref-Aegisub-Scripts/main/DependencyControl.json",
+    "phoscity-scripts": "https://raw.githubusercontent.com/PhosCity/Aegisub-Scripts/main/DependencyControl.json",
+    "zeref-scripts": "https://raw.githubusercontent.com/TypesettingTools/zeref-Aegisub-Scripts/main/DependencyControl.json",
+    "arch1t3cht-scripts": "https://raw.githubusercontent.com/TypesettingTools/arch1t3cht-Aegisub-Scripts/main/DependencyControl.json",
+    "ILL": "https://raw.githubusercontent.com/TypesettingTools/ILL-Aegisub-Scripts/main/DependencyControl.json",
+    "Ghegghe": "https://raw.githubusercontent.com/Ghegghe/aegis-lua-scripts/main/DependencyControl.json"
+  },
+  "macros": {
+    "ghe.Whispers": {
+      "url": "@{baseUrl}#@{namespace}",
+      "author": "Ghegghe",
+      "name": "Whispers",
+      "description": "Transcrive audio to text",
+      "fileBaseUrl": "@{fileBaseUrl}/@{channel}/macros/@{namespace}",
+      "channels": {
+        "main": {
+          "version": "0.1.1",
+          "released": "2025-05-23",
+          "default": true,
+          "files": [
+            {
+              "name": ".lua",
+              "url": "@{fileBaseUrl}@{fileName}",
+              "sha1": "45215C7DD6A7A6F2F45C79AD4FC93F83EF701074"
+            }
+          ]
+        }
+      },
+      "changelog": {
+        "0.1.0": ["Initial Release"],
+        "0.1.1": ["Updated logic to work with py ass-whispers"]
+      }
+    }
+  }
 }

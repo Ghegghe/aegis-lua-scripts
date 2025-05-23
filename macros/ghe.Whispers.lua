@@ -1,7 +1,7 @@
 script_name        = "Whispers"
 script_description = "Get audio transcription"
 script_author      = "Ghegghe"
-script_version     = "0.1.0"
+script_version     = "0.1.1"
 script_namespace   = "ghe.Whispers"
 
 local DependencyControl = require("l0.DependencyControl")
@@ -18,7 +18,7 @@ local is_windows = (pathsep == "\\")
 
 local python_cmd = is_windows and "python" or "python3"
 local ass_whispers_cmd = python_cmd .. " -m ass_whispers"
-local ass_whispers_compatible_version = "0.1.3"
+local ass_whispers_compatible_version = "0.1.4"
 
 local timestamp_file_name = ".timestamps.json"
 local config_file_name = "ghe.Whispers.json"
