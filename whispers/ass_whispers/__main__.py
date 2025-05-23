@@ -24,7 +24,7 @@ from faster_whisper import WhisperModel
 # --sentence
 # --standard_asia"
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
 
 def format_timestamp(seconds: float) -> str:
@@ -117,7 +117,7 @@ def main():
     )
     parser.add_argument(
         "--device",
-        type=Literal["cpu", "cuda", "auto"],
+        type=str,
         default="cuda",
         help="device to use, cuda or cpu",
     )
@@ -208,9 +208,7 @@ def main():
     parser.add_argument("--version", action="version", version=__version__)
 
     args = parser.parse_args()
-
-    print(args)
-
+    
     whispers(
         audio=args.audio,
         timestamps=args.timestamps,
