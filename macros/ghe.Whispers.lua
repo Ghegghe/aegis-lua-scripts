@@ -18,7 +18,7 @@ local is_windows = (pathsep == "\\")
 
 local python_cmd = is_windows and "python" or "python3"
 local ass_whispers_cmd = python_cmd .. " -m ass_whispers"
-local ass_whispers_compatible_version = "0.1.4"
+local ass_whispers_compatible_version = "0.1.5"
 
 local timestamp_file_name = ".timestamps.json"
 local config_file_name = "ghe.Whispers.json"
@@ -65,6 +65,12 @@ local function get_ass_whispers_version()
 		return nil
 	end
     return result
+end
+
+local function validate_ass_whispers_version(ass_whispers_version)
+	local major1, minor1, patch1 = ass_whispers_version:match("(%d+)%.(%d+)%.(%d+)")
+	local major2, minor2, patch2 = ass_whispers_compatible_version:match("(%d+)%.(%d+)%.(%d+)")
+	return not (major1 < major2 or minor1 < minor2 or patch1 < patch2)
 end
 
 local function install_ass_whispers()
@@ -157,14 +163,14 @@ function whisper(subs, sel)
 	
 	-- check ass-whispers
 	local ass_whispers_version = get_ass_whispers_version()
-	if not ass_whispers_version or ass_whispers_compatible_version ~= ass_whispers_version then
+	if not ass_whispers_version or not validate_ass_whispers_version(ass_whispers_version) then
 		if not ass_whispers_version then
 			aegisub.debug.out("Ass-whispers not found. Installation in progress...\n")
 		else
 			aegisub.debug.out("Ass-whispers version " .. ass_whispers_version .. " is not compatible whith this version of the script. Installation of " .. ass_whispers_compatible_version .. " in progress...\n")
 		end
 		install_ass_whispers()
-		if get_ass_whispers_version() == ass_whispers_compatible_version then
+		if validate_ass_whispers_version(get_ass_whispers_version()) then
 			aegisub.debug.out("Installation completed.\n")
 		else
 			aegisub.cancel("Installation of ass-whispers failed.\n")
