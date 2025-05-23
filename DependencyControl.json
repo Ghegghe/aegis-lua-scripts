@@ -31,7 +31,7 @@
 			"author": "Ghegghe",
 			"name": "Whispers",
 			"description": "Transcrive audio to text",
-			"fileBaseUrl": "@{fileBaseUrl}/macros/@{namespace}",
+			"fileBaseUrl": "@{fileBaseUrl}/@{channel}/macros/@{namespace}",
 			"channels": {
 				"main": {
 					"version": "0.1.0",

@@ -88,11 +88,17 @@ It works by extracting audio clips based on each line’s timing and passing the
 
 ### 📦 Requirements
 
-- [**ffmpeg**](https://ffmpeg.org/download.html)
-- [**whisper-standalone-win**](https://github.com/Purfview/whisper-standalone-win)
+- Python 3.9 or greater
 
-> ⚠️ **Both `ffmpeg` and `whisper-standalone.exe` must be available in your system's `PATH`.**
-> After setting the PATH, **restart Aegisub** to apply the changes.
+#### GPU Support
+
+To enable GPU acceleration, the following NVIDIA libraries must be installed:
+
+- [cuBLAS for CUDA 12](https://developer.nvidia.com/cublas)
+- [cuDNN 9 for CUDA 12](https://developer.nvidia.com/cudnn)
+
+> ⚠️ **Make sure the DLLs are accessible via your system's `PATH`.**  
+> After updating your `PATH`, **restart Aegisub** to apply the changes.
 
 ### 🛠️ Installation
 
