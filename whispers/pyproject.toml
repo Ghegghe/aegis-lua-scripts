@@ -1,6 +1,6 @@
 [project]
 name = "ass-whispers"
-version = "0.1.5"
+version = "0.2.0"
 description = "Transcribe audio to text for Aegisub macro Whispers"
 readme = "README.md"
 authors = [

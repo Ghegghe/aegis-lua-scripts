@@ -24,7 +24,7 @@ from faster_whisper import WhisperModel
 # --sentence
 # --standard_asia"
 
-__version__ = "0.1.5"
+__version__ = "0.2.0"
 
 
 def format_timestamp(seconds: float) -> str:
@@ -54,13 +54,14 @@ def whispers(
     word_timestamps: bool,
     vad_filter: bool,
     rm_ts: bool,
+    output_file: Optional[str],
 ):
     """
     Transcribe audio files with Whisper
     """
 
     print(f"Loading whisper '{model}'...")
-    model = WhisperModel(
+    whisper_model = WhisperModel(
         model_size_or_path=model,
         device=device,
         compute_type=compute_type,
@@ -73,36 +74,51 @@ def whispers(
     with open(timestamps, "r", encoding="utf-8") as f:
         timestamp_file = json.load(f)
 
-    clip_timestamps = []
-    for ts in timestamp_file:
-        clip_timestamps.append(ts["start_time"] / 1000)
-        clip_timestamps.append(ts["end_time"] / 1000)
-
     print(f"Transcribing: {audio}")
-    segments, _ = model.transcribe(
-        audio,
-        language=language,
-        temperature=temperature,
-        best_of=best_of,
-        beam_size=beam_size,
-        patience=patience,
-        repetition_penalty=repetition_penalty,
-        condition_on_previous_text=condition_on_previous_text,
-        no_speech_threshold=no_speech_threshold,
-        log_prob_threshold=log_prob_threshold,
-        compression_ratio_threshold=compression_ratio_threshold,
-        word_timestamps=word_timestamps,
-        vad_filter=vad_filter,
-        clip_timestamps=clip_timestamps,
-    )
+    output = []
+    for timestamp in timestamp_file:
+        start_time = timestamp["start_time"] / 1000
+        end_time = timestamp["end_time"] / 1000
+        print(
+            f"Line {timestamp['line_number']}: {format_timestamp(start_time)} -> {format_timestamp(end_time)}"
+        )
+        output.append(
+            {
+                "line_number": timestamp["line_number"],
+                "start_time": timestamp["start_time"],
+                "end_time": timestamp["end_time"],
+            }
+        )
+        segments, _ = whisper_model.transcribe(
+            audio,
+            language=language,
+            temperature=temperature,
+            best_of=best_of,
+            beam_size=beam_size,
+            patience=patience,
+            repetition_penalty=repetition_penalty,
+            condition_on_previous_text=condition_on_previous_text,
+            no_speech_threshold=no_speech_threshold,
+            log_prob_threshold=log_prob_threshold,
+            compression_ratio_threshold=compression_ratio_threshold,
+            word_timestamps=word_timestamps,
+            vad_filter=vad_filter,
+            clip_timestamps=[start_time, end_time],
+        )
 
-    for segment in segments:
-        start_ts = format_timestamp(segment.start)
-        end_ts = format_timestamp(segment.end)
-        print(f"[{start_ts} -> {end_ts}] {segment.text}")
+        output[-1]["segments"] = []
+        for segment in segments:
+            print(
+                f"[{format_timestamp(segment.start)} -> {format_timestamp(segment.end)}] {segment.text}"
+            )
+            output[-1]["segments"].append(segment.text)
 
     if rm_ts:
         os.remove(timestamps)
+
+    if output_file:
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(json.dumps(output, indent=4))
 
 
 def main():
@@ -205,10 +221,15 @@ def main():
         dest="rm_ts",
         help="do not delete timestamps file after transcription",
     )
+    parser.add_argument(
+        "--output_file",
+        type=str,
+        default=None,
+        help="file where write the output (e.g. 'path/to/output.txt')",
+    )
     parser.add_argument("--version", action="version", version=__version__)
 
     args = parser.parse_args()
-    
     whispers(
         audio=args.audio,
         timestamps=args.timestamps,
@@ -228,6 +249,7 @@ def main():
         word_timestamps=args.word_timestamps,
         vad_filter=args.vad_filter,
         rm_ts=args.rm_ts,
+        output_file=args.output_file,
     )
 
 
