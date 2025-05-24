@@ -18,30 +18,34 @@ local is_windows = (pathsep == "\\")
 
 local python_cmd = is_windows and "python" or "python3"
 local ass_whispers_cmd = python_cmd .. " -m ass_whispers"
-local ass_whispers_compatible_version = "0.1.5"
+local ass_whispers_compatible_version = "0.2.0"
 
 local timestamp_file_name = ".timestamps.json"
+local output_file_name = ".output.json"
 local config_file_name = "ghe.Whispers.json"
 
 local default_config = {
-	model = "large-v2",
-	device = "cuda",
-	compute_type = "float32",
-	language = "ja",
-	temperature = 0.4,
-	best_of = 8,
-	beam_size = 10,
-	patience = 2,
-	repetition_penalty = 1.4,
-	condition_on_previous_text = false,
-	no_speech_threshold = 0.275,
-	log_prob_threshold = -1,
-	compression_ratio_threshold = 1.75,
-	word_timestamps = true,
-	vad_filter = true,
-	-- vad_method = "pyannote_v3",
-	-- sentence = true,
-	-- standard_asia = true,
+	script_mode = 'comment',
+	whisper_params = {
+		model = "large-v2",
+		device = "cuda",
+		compute_type = "float32",
+		language = "ja",
+		temperature = 0.4,
+		best_of = 8,
+		beam_size = 10,
+		patience = 2,
+		repetition_penalty = 1.4,
+		condition_on_previous_text = false,
+		no_speech_threshold = 0.275,
+		log_prob_threshold = -1,
+		compression_ratio_threshold = 1.75,
+		word_timestamps = true,
+		vad_filter = true,
+		-- vad_method = "pyannote_v3",
+		-- sentence = true,
+		-- standard_asia = true,
+	}
 }
 
 local function get_python_version()
@@ -137,12 +141,28 @@ local function write_json(path, obj)
 	return true
 end
 
+local function deepcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[deepcopy(orig_key)] = deepcopy(orig_value)
+        end
+        setmetatable(copy, deepcopy(getmetatable(orig)))
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
+
 local function load_config()
 	local config_json = read_json(aegisub.decode_path("?user/config/" .. config_file_name))
-	local config = default_config
+	local config = deepcopy(default_config)
     if config_json ~= nil then
-		for k, v in pairs(config_json) do
-			config[k] = v
+		config.script_mode = config_json.script_mode
+		for k, v in pairs(config_json.whisper_params) do
+			config.whisper_params[k] = v
 		end
 	else
 		write_json(aegisub.decode_path("?user/config/" .. config_file_name), config)
@@ -154,10 +174,12 @@ function whisper(subs, sel)
 	-- check python version
 	local python_major, python_minor = get_python_version()
 	if not python_major then
-		aegisub.cancel("Python not found.\n")
+		aegisub.debug.out("Python not found.\n")
+		aegisub.cancel()
 		return
 	elseif not (python_major > 3 or (python_major == 3 and python_minor >= 9)) then
-		aegisub.cancel("Python version 3.9 or greater is required.\n")
+		aegisub.debug.out("Python version 3.9 or greater is required.\n")
+		aegisub.cancel()
 		return
 	end
 	
@@ -173,7 +195,8 @@ function whisper(subs, sel)
 		if validate_ass_whispers_version(get_ass_whispers_version()) then
 			aegisub.debug.out("Installation completed.\n")
 		else
-			aegisub.cancel("Installation of ass-whispers failed.\n")
+			aegisub.debug.out("Installation of ass-whispers failed.\n")
+			aegisub.cancel()
 			return
 		end
 	end
@@ -183,40 +206,34 @@ function whisper(subs, sel)
 	local audio_file = aegisub.project_properties().audio_file
 	local sub_folder = aegisub.decode_path("?script")
 	local timestamp_file = sub_folder .. pathsep .. timestamp_file_name
+	local output_file = sub_folder .. pathsep .. output_file_name
 	
 	if not audio_file then
-		aegisub.cancel("Audio file not found")
+		aegisub.debug.out("Audio file not found.\n")
+		aegisub.cancel()
 		return
 	end
 	if not sub_folder then
-		aegisub.cancel("Subtitle folder not found")
+		aegisub.debug.out("Subtitle folder not found.\n")
+		aegisub.cancel()
 		return
 	end
 
 	-- save timestamps
-	local file = io.open(timestamp_file, "w")
-	if not file then
-		aegisub.cancel("Unable to save timestamps into file.\n")
+	local data = {}
+	for _, i in ipairs(sel) do
+		local line = subs[i]
+		table.insert(data, {
+			line_number = i,
+			start_time = line.start_time,
+			end_time = line.end_time
+		})
 	end
-
-	file:write("[\n")
-	for index, i in ipairs(sel) do
-        local line = subs[i]
-		local start_time = line.start_time
-		local end_time = line.end_time
-
-		local line = string.format("  {\"start_time\": %d, \"end_time\": %d}", start_time, end_time)
-		if index < #sel then
-			line = line .. ","
-		end
-		file:write(line .. "\n")
-    end
-	file:write("]\n")
-	file:close()
+	write_json(timestamp_file, data)
 
 	-- call python for transcription
 	local cmd = ass_whispers_cmd .. " " .. string.format("%q", audio_file) .. " " .. string.format("%q", timestamp_file)
-	for k, v in pairs(config) do
+	for k, v in pairs(config.whisper_params) do
 		if type(v) == "boolean" and v then
 			cmd = cmd .. " --" .. k
 		elseif type(v) == "number" then
@@ -225,7 +242,25 @@ function whisper(subs, sel)
 			cmd = cmd .. " --" .. k .. " " .. v
 		end
 	end
-	run_detached_script(cmd)
+
+	if config.script_mode == "external window" then
+		run_detached_script(cmd)
+	else
+		os.execute(cmd .. " --output_file " .. string.format("%q", output_file))
+
+		local transcription = read_json(output_file)
+		for _, transcription_line in ipairs(transcription) do
+			local line = subs[transcription_line.line_number]
+			if config.script_mode == "replace" then
+				line.text = line.text:match("^%s*(.-)%s*$"):match("%b{}") .. table.concat(transcription_line.segments, "\\N")
+			elseif config.script_mode == "comment" then
+				line.text = line.text .. "{" .. table.concat(transcription_line.segments, "\\N") .. "}"
+			end
+			subs[transcription_line.line_number] = line
+		end
+
+		os.remove(output_file)
+	end
 	
     aegisub.set_undo_point(script_name)
 end
@@ -236,88 +271,105 @@ function whispers_config()
 	local whisper_config_gui = {
 		{class="label", label="Whisper Model Settings", x=0, y=0, width=2},
 	
-		{class="label", label="Model:", x=0, y=1},
-		{class="edit", name="model", value=config.model, x=1, y=1},
+		{class="label", label="Script mode:", x=0, y=1},
+		{class="dropdown", name="script_mode", items={"comment", "replace", "external window"}, value=config.script_mode, x=1, y=1},
+
+		{class="label", label="Model:", x=0, y=2},
+		{class="edit", name="model", value=config.whisper_params.model, x=1, y=2},
 	
-		{class="label", label="Device:", x=0, y=2},
-		{class="dropdown", name="device", items={"cpu", "cuda", "auto"}, value=config.device, x=1, y=2},
+		{class="label", label="Device:", x=0, y=3},
+		{class="dropdown", name="device", items={"cpu", "cuda", "auto"}, value=config.whisper_params.device, x=1, y=3},
 	
-		{class="label", label="Compute Type:", x=0, y=3},
-		{class="edit", name="compute_type", value=config.compute_type, x=1, y=3},
+		{class="label", label="Compute Type:", x=0, y=4},
+		{class="edit", name="compute_type", value=config.whisper_params.compute_type, x=1, y=4},
 	
-		{class="label", label="Language (optional):", x=0, y=4},
-		{class="edit", name="language", value=config.language, x=1, y=4},
+		{class="label", label="Language (optional):", x=0, y=5},
+		{class="edit", name="language", value=config.whisper_params.language, x=1, y=5},
 	
-		{class="label", label="Temperature:", x=0, y=5},
-		{class="edit", name="temperature", value=config.temperature, x=1, y=5},
+		{class="label", label="Temperature:", x=0, y=6},
+		{class="edit", name="temperature", value=config.whisper_params.temperature, x=1, y=6},
 	
-		{class="label", label="Best Of:", x=0, y=6},
-		{class="intedit", name="best_of", value=config.best_of, x=1, y=6},
+		{class="label", label="Best Of:", x=0, y=7},
+		{class="intedit", name="best_of", value=config.whisper_params.best_of, x=1, y=7},
 	
-		{class="label", label="Beam Size:", x=0, y=7},
-		{class="intedit", name="beam_size", value=config.beam_size, x=1, y=7},
+		{class="label", label="Beam Size:", x=0, y=8},
+		{class="intedit", name="beam_size", value=config.whisper_params.beam_size, x=1, y=8},
 	
-		{class="label", label="Patience:", x=0, y=8},
-		{class="floatedit", name="patience", value=config.patience, x=1, y=8},
+		{class="label", label="Patience:", x=0, y=9},
+		{class="floatedit", name="patience", value=config.whisper_params.patience, x=1, y=9},
 	
-		{class="label", label="Repetition Penalty:", x=0, y=9},
-		{class="floatedit", name="repetition_penalty", value=config.repetition_penalty, x=1, y=9},
+		{class="label", label="Repetition Penalty:", x=0, y=10},
+		{class="floatedit", name="repetition_penalty", value=config.whisper_params.repetition_penalty, x=1, y=10},
 	
-		{class="checkbox", name="condition_on_previous_text", label="Condition on previous text", value=config.condition_on_previous_text, x=0, y=10, width=2},
-		{class="checkbox", name="word_timestamps", label="Word timestamps", value=config.word_timestamps, x=0, y=11, width=2},
-		{class="checkbox", name="vad_filter", label="VAD filter", value=config.vad_filter, x=0, y=12, width=2},
+		{class="checkbox", name="condition_on_previous_text", label="Condition on previous text", value=config.whisper_params.condition_on_previous_text, x=0, y=11, width=2},
+		{class="checkbox", name="word_timestamps", label="Word timestamps", value=config.whisper_params.word_timestamps, x=0, y=12, width=2},
+		{class="checkbox", name="vad_filter", label="VAD filter", value=config.whisper_params.vad_filter, x=0, y=13, width=2},
 	
-		{class="label", label="No speech threshold (optional):", x=0, y=13},
-		{class="edit", name="no_speech_threshold", value=config.no_speech_threshold, x=1, y=13},
+		{class="label", label="No speech threshold (optional):", x=0, y=14},
+		{class="edit", name="no_speech_threshold", value=config.whisper_params.no_speech_threshold, x=1, y=14},
 	
-		{class="label", label="Log prob threshold (optional):", x=0, y=14},
-		{class="edit", name="log_prob_threshold", value=config.log_prob_threshold, x=1, y=14},
+		{class="label", label="Log prob threshold (optional):", x=0, y=15},
+		{class="edit", name="log_prob_threshold", value=config.whisper_params.log_prob_threshold, x=1, y=15},
 	
-		{class="label", label="Compression ratio threshold (optional):", x=0, y=15},
-		{class="edit", name="compression_ratio_threshold", value=config.compression_ratio_threshold, x=1, y=15},
+		{class="label", label="Compression ratio threshold (optional):", x=0, y=16},
+		{class="edit", name="compression_ratio_threshold", value=config.whisper_params.compression_ratio_threshold, x=1, y=16},
 	}
 	
-	local buttons = {"OK", "Cancel"}
+	local buttons = {"OK", "Restore defaults", "Cancel"}
 	
 	local pressed, input = aegisub.dialog.display(whisper_config_gui, buttons)
-	
-	if pressed == "OK" then
+
+	if pressed == "Restore defaults" then
+		if not write_json(aegisub.decode_path("?user/config/" .. config_file_name), default_config) then
+			aegisub.debug.out("Unable to open file for writing: " .. aegisub.decode_path("?user/config/" .. config_file_name))
+			aegisub.cancel()
+		end
+	elseif pressed == "OK" then
+		if input.script_mode then
+			config.script_mode = input.script_mode
+		end
 		if input.model then
-			config.model = input.model
+			config.whisper_params.model = input.model
 		end
 		if input.device then
-			config.device = input.device
+			config.whisper_params.device = input.device
 		end
 		if input.compute_type then
-			config.compute_type = input.compute_type
+			config.whisper_params.compute_type = input.compute_type
 		end
 		if input.temperature then
-			config.temperature = input.temperature
+			config.whisper_params.temperature = input.temperature
 		end
 		if input.best_of then
-			config.best_of = input.best_of
+			config.whisper_params.best_of = input.best_of
 		end
 		if input.beam_size then
-			config.beam_size = input.beam_size
+			config.whisper_params.beam_size = input.beam_size
 		end
 		if input.patience then
-			config.patience = input.patience
+			config.whisper_params.patience = input.patience
 		end
 		if input.repetition_penalty then
-			config.repetition_penalty = input.repetition_penalty
+			config.whisper_params.repetition_penalty = input.repetition_penalty
 		end
 		if input.condition_on_previous_text then
-			config.condition_on_previous_text = input.condition_on_previous_text
+			config.whisper_params.condition_on_previous_text = input.condition_on_previous_text
 		end
 		if input.word_timestamps then
-			config.word_timestamps = input.word_timestamps
+			config.whisper_params.word_timestamps = input.word_timestamps
 		end
 		if input.vad_filter then
-			config.vad_filter = input.vad_filter
+			config.whisper_params.vad_filter = input.vad_filter
 		end
+		config.whisper_params.language = input.language
+		config.whisper_params.no_speech_threshold = input.no_speech_threshold
+		config.whisper_params.log_prob_threshold = input.log_prob_threshold
+		config.whisper_params.compression_ratio_threshold = input.compression_ratio_threshold
+		
 
 		if not write_json(aegisub.decode_path("?user/config/" .. config_file_name), config) then
-			aegisub.cancel("Unable to open file for writing: " .. aegisub.decode_path("?user/config/" .. config_file_name))
+			aegisub.debug.out("Unable to open file for writing: " .. aegisub.decode_path("?user/config/" .. config_file_name))
+			aegisub.cancel()
 		end
 	end
 end

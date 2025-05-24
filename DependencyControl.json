@@ -34,21 +34,22 @@
       "fileBaseUrl": "@{fileBaseUrl}/@{channel}/macros/@{namespace}",
       "channels": {
         "main": {
-          "version": "0.1.1",
-          "released": "2025-05-23",
+          "version": "0.2.0",
+          "released": "2025-05-24",
           "default": true,
           "files": [
             {
               "name": ".lua",
               "url": "@{fileBaseUrl}@{fileName}",
-              "sha1": "77AC4C8F3D2C96F986EB33DAB0CEAD3025A1B8EC"
+              "sha1": "0DE3FF19157E995C3E81A6947E7ED09574FC2507"
             }
           ]
         }
       },
       "changelog": {
         "0.1.0": ["Initial Release"],
-        "0.1.1": ["Updated logic to work with py ass-whispers"]
+        "0.1.1": ["Updated logic to work with py ass-whispers"],
+        "0.2.0": ["Added options for transcription, bugfixes"]
       }
     }
   }
